@@ -857,6 +857,7 @@ namespace Core {
         if (m_blCondition == false) {
             do {
                 // Oops it seems that we are not allowed to pass.
+                TRACE_L1("second pthread_cond_wait");
                 nResult = (pthread_cond_wait(&m_syncCondition, &m_syncAdminLock) == 0 ? Core::ERROR_NONE : Core::ERROR_GENERAL);
 
                 // For some reason the documentation says that we have to double check on
@@ -917,8 +918,6 @@ namespace Core {
 
                 do {
                     // Oops it seems that we are not allowed to pass.
-                    TRACE_L1("m_syncCondition: %p", (void*)m_syncCondition);
-                    TRACE_L1("m_syncAdminLock: %p", (void*)m_syncAdminLock);
                     nResult = (pthread_cond_timedwait(&m_syncCondition, &m_syncAdminLock, &structTime) != 0 ? Core::ERROR_TIMEDOUT : Core::ERROR_NONE);
 
                     // For some reason the documentation says that we have to double check on
