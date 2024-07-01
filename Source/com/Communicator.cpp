@@ -466,7 +466,7 @@ namespace RPC {
     {
         ASSERT(BaseClass::IsOpen() == false);
         _announceEvent.ResetEvent();
-
+        TRACE_L1("CommunicatorClient::Open %d", __LINE__);
         _announceMessage.Parameters().Set(Core::ProcessInfo().Id(), className, interfaceId, version);
 
         uint32_t result = BaseClass::Open(waitTime);

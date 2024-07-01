@@ -1619,7 +1619,7 @@ POP_WARNING()
         inline INTERFACE* Open(const string& className, const uint32_t version = static_cast<uint32_t>(~0), const uint32_t waitTime = CommunicationTimeOut)
         {
             INTERFACE* result = nullptr;
-
+            TRACE_L1("Open function class name : %s", className.c_str());
             if (Open(waitTime, className, INTERFACE::ID, version) == Core::ERROR_NONE) {
                 // Oke we could open the channel, lets get the interface
                 result = WaitForCompletion<INTERFACE>(waitTime);

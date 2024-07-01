@@ -898,10 +898,11 @@ namespace Core {
         return (::WaitForSingleObjectEx(m_syncEvent, nTime, FALSE) == WAIT_OBJECT_0 ? Core::ERROR_NONE : Core::ERROR_TIMEDOUT);
 #else
         if (nTime == Core::infinite) {
+            TRACE_L1("time in infinity : %ld", nTime);
             return (Lock());
         } else {
             int nResult = Core::ERROR_NONE;
-
+            TRACE_L1("time in 3sec : %ld", nTime);
             // See if we can check the state.
             pthread_mutex_lock(&m_syncAdminLock);
 
@@ -916,6 +917,8 @@ namespace Core {
 
                 do {
                     // Oops it seems that we are not allowed to pass.
+                    TRACE_L1("m_syncCondition: %p", (void*)m_syncCondition);
+                    TRACE_L1("m_syncAdminLock: %p", (void*)m_syncAdminLock);
                     nResult = (pthread_cond_timedwait(&m_syncCondition, &m_syncAdminLock, &structTime) != 0 ? Core::ERROR_TIMEDOUT : Core::ERROR_NONE);
 
                     // For some reason the documentation says that we have to double check on
