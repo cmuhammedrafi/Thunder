@@ -791,7 +791,7 @@ namespace Core {
         , m_blCondition(blSet)
 #endif
     {
-        TRACE_L5("Constructor Event <%p>", (this));
+        TRACE_L1("Constructor Event <%p>", (this));
 
 #ifdef __POSIX__
         pthread_condattr_t attr;
@@ -827,7 +827,7 @@ namespace Core {
     {
 
 #ifdef __POSIX__
-        TRACE_L5("Destructor Event <%p>", (this));
+        TRACE_L1("Destructor Event <%p>", (this));
 
         // If we really create it, we really have to destroy it.
         pthread_mutex_destroy(&m_syncAdminLock);
@@ -857,7 +857,6 @@ namespace Core {
         if (m_blCondition == false) {
             do {
                 // Oops it seems that we are not allowed to pass.
-                TRACE_L1("second pthread_cond_wait");
                 nResult = (pthread_cond_wait(&m_syncCondition, &m_syncAdminLock) == 0 ? Core::ERROR_NONE : Core::ERROR_GENERAL);
 
                 // For some reason the documentation says that we have to double check on
@@ -867,7 +866,7 @@ namespace Core {
 
             if (nResult != 0) {
                 // Something went wrong, so assume...
-                TRACE_L5("Error waiting for event <%d>.", nResult);
+                TRACE_L1("Error waiting for event <%d>.", nResult);
             }
         }
 
@@ -899,11 +898,9 @@ namespace Core {
         return (::WaitForSingleObjectEx(m_syncEvent, nTime, FALSE) == WAIT_OBJECT_0 ? Core::ERROR_NONE : Core::ERROR_TIMEDOUT);
 #else
         if (nTime == Core::infinite) {
-            TRACE_L1("time in infinity : %ld", nTime);
             return (Lock());
         } else {
             int nResult = Core::ERROR_NONE;
-            TRACE_L1("time in 3sec : %ld", nTime);
             // See if we can check the state.
             pthread_mutex_lock(&m_syncAdminLock);
 
@@ -918,16 +915,33 @@ namespace Core {
 
                 do {
                     // Oops it seems that we are not allowed to pass.
-                    nResult = (pthread_cond_timedwait(&m_syncCondition, &m_syncAdminLock, &structTime) != 0 ? Core::ERROR_TIMEDOUT : Core::ERROR_NONE);
+                    nResult = pthread_cond_timedwait(&m_syncCondition, &m_syncAdminLock, &structTime);
 
                     // For some reason the documentation says that we have to double check on
                     // the condition variable to see if we are allowed to fall through, so we
                     // do (Guide to DEC threads, March 1996 ,page pthread-56, paragraph 4)
+
+                    if (nResult == ETIMEDOUT) {
+                        // Som/ething went wrong, so assume...
+                        TRACE_L1("Timed out waiting for event <%d>.", nTime);
+                        nResult = Core::ERROR_TIMEDOUT;
+                    }
+                    else if (nResult != 0) {
+                        // Something went wrong, so assume...
+                        TRACE_L1("Waiting on semaphore failed. Error code <%d>", nResult);
+                        nResult = Core::ERROR_GENERAL;
+                    }
+                    else
+                    {
+                        TRACE_L1("waiting for event success <%d>. ", nTime);
+                        nResult = Core::ERROR_NONE;
+                    }
+
                 } while ((m_blCondition == false) && (nResult == Core::ERROR_NONE));
 
                 if (nResult != 0) {
                     // Something went wrong, so assume...
-                    TRACE_L5("Timed out waiting for event <%d>!", nResult);
+                    TRACE_L1("Timed out waiting for event <%d>!", nResult);
                 }
             }
 
